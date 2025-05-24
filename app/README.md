@@ -1,3 +1,4 @@
+```
 cookiecutter-fastapi-auth/
 ├── {{cookiecutter.project_slug}}/
 │   ├── app/
@@ -17,8 +18,9 @@ cookiecutter-fastapi-auth/
 │   │   └── requirements.txt
 │   │   └── README.md
 ├── cookiecutter.json
+```
 
-
+```
 cookiecutter-fastapi-auth/
 ├── cookiecutter.json               ✅ Archivo requerido por Cookiecutter en la raíz
 ├── {{cookiecutter.project_slug}}/  ✅ Carpeta generada con el nombre del proyecto
@@ -43,8 +45,8 @@ cookiecutter-fastapi-auth/
 │   │   └── deps.py  ← si lo necesitas globalmente
 │   ├── README.md                   ✅ Documentación del proyecto
 │   └── requirements.txt            ✅ Dependencias del entorno
-
-
+```
+```
 cookiecutter-fastapi-auth/
 ├── cookiecutter.json                  ✅ Archivo de configuración para la plantilla.
 │                                      Define variables como project_name, author, etc.
@@ -84,4 +86,4 @@ cookiecutter-fastapi-auth/
 │   │   │
 │   └── requirements.txt               ✅ Lista de dependencias necesarias para correr el proyecto.
 │                                      Compatible con `pip install -r requirements.txt`.
-
+```
