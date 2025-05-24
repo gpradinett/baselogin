@@ -1,51 +1,18 @@
-```
-cookiecutter-fastapi-auth/
-├── {{cookiecutter.project_slug}}/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── routes/
-│   │   │   │   ├── users.py
-│   │   │   │   ├── login.py
-│   │   │   ├── main.py
-│   │   │   ├── deps.py
-│   │   ├── core/
-│   │   │   ├── config/
-│   │   │   ├── db.py
-│   │   │   ├── security.py
-│   │   ├── models.py
-│   │   ├── crud.py
-│   │   ├── main.py
-│   │   └── requirements.txt
-│   │   └── README.md
-├── cookiecutter.json
-```
+# 📦 Backend - BaseLogin
 
-```
-cookiecutter-fastapi-auth/
-├── cookiecutter.json               ✅ Archivo requerido por Cookiecutter en la raíz
-├── {{cookiecutter.project_slug}}/  ✅ Carpeta generada con el nombre del proyecto
-│   ├── app/                        ✅ Código principal del proyecto
-│   │   ├── __init__.py
-│   │   ├── api/                    ✅ Lógica de endpoints
-│   │   │   ├── __init__.py
-│   │   │   ├── deps.py             ✅ Dependencias compartidas
-│   │   │   ├── main.py
-│   │   │   └── routes/             ✅ Submódulos organizados por funcionalidad
-│   │   │       ├── __init__.py
-│   │   │       ├── login.py
-│   │   │       └── users.py
-│   │   ├── core/                   ✅ Configuración, seguridad, base de datos
-│   │   │   ├── __init__.py
-│   │   │   ├── config.py
-│   │   │   ├── db.py
-│   │   │   └── security.py
-│   │   ├── crud.py                 ✅ Lógica de base de datos (repositorio)
-│   │   ├── models.py               ✅ Modelos SQLModel/Pydantic
-│   │   ├── main.py                 ✅ Punto de entrada FastAPI
-│   │   └── deps.py  ← si lo necesitas globalmente
-│   ├── README.md                   ✅ Documentación del proyecto
-│   └── requirements.txt            ✅ Dependencias del entorno
-```
+This backend is built with FastAPI and provides a solid foundation for user authentication and management. The structure follows modern best practices of Python development, including modular organization, database management, and automated testing. 
+
+### 🚀 Key features 
+### ✅ OAuth2-based authentication with JWT (access token) 
+### 🔐 Support for superuser and normal user login 
+### 📄 API paths organized by modules (/login, /users) 
+### 🧪 Testing with pytest and FastAPI's TestClient 
+### 🗃️ Database managed with SQLModel and alembic 
+### ⚙️ Configuration using environment variables (.env) 
+### 🌱 Database initialization script with predefined users 
+
+## 📁 Folder Structure
+
 ```
 cookiecutter-fastapi-auth/
 ├── cookiecutter.json                  ✅ Archivo de configuración para la plantilla.
@@ -86,4 +53,10 @@ cookiecutter-fastapi-auth/
 │   │   │
 │   └── requirements.txt               ✅ Lista de dependencias necesarias para correr el proyecto.
 │                                      Compatible con `pip install -r requirements.txt`.
+```
+
+### 📦 Requirements Python 3.12 PostgreSQL Virtualenv o entorno virtual similares 
+### 🧪 Run tests
+```
+pytest
 ```
