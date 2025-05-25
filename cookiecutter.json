@@ -1,0 +1,7 @@
+{
+  "project_name": "My FastAPI App",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "author": "Fernando Gonzales Pradinett",
+  "email": "gpradinett@proton.me",
+  "python_version": "3.12"
+}
