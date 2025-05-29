@@ -10,7 +10,15 @@ from app.api.deps import (
     SessionDep,
 )
 from app.api.deps import get_current_active_superuser as gcau
-from app.models import User, UserCreate, UsersPublic, UserPublic, Message, UserUpdate, UserRegister
+from app.models import (
+    User,
+    UserCreate,
+    UsersPublic,
+    UserPublic,
+    Message,
+    UserUpdate,
+    UserRegister,
+)
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -19,36 +27,40 @@ router = APIRouter(prefix="/users", tags=["users"])
 """
 Get all users
 """
+
+
 @router.get("/", dependencies=[Depends(gcau)], response_model=UsersPublic)
 async def read_users(
     *,
-    session: SessionDep, # type: ignore
+    session: SessionDep,  # type: ignore
     skip: int = 0,
     limit: int = 100,
 ) -> Any:
     """
     Get current user.
     """
-    
+
     count_statement = select(func.count()).select_from(User)
-    #print("count_statement", count_statement)
+    # print("count_statement", count_statement)
     count = session.exec(count_statement).scalar()
     print("count", count)
-    
+
     statement = select(User).offset(skip).limit(limit)
     print("statement", statement)
     users = session.exec(statement).scalars().all()
     print("users", users)
-    
+
     return UsersPublic(
         data=users,
         count=count,
-    ) 
-    
+    )
+
 
 """
 Get current user
 """
+
+
 @router.get("/me", response_model=UserPublic)
 async def read_user_me(
     current_user: CurrentUser,
@@ -63,10 +75,12 @@ async def read_user_me(
 """
 Create new user
 """
+
+
 @router.post("/", response_model=UserPublic)
 async def create_user(
     *,
-    session: SessionDep, # type: ignore
+    session: SessionDep,  # type: ignore
     user_in: UserCreate,
 ) -> Any:
     """
@@ -86,10 +100,12 @@ async def create_user(
 """
 Delete user
 """
+
+
 @router.delete("/me", response_model=Message)
 async def delete_user_me(
     current_user: CurrentUser,
-    session: SessionDep, # type: ignore
+    session: SessionDep,  # type: ignore
 ) -> Any:
     """
     Delete current user.
@@ -100,17 +116,19 @@ async def delete_user_me(
             detail="Superuser cannot delete himself.",
         )
     session.delete(current_user)
-    session.commit()    
+    session.commit()
     return Message(message="User deleted successfully.")
 
 
 """
 Update user
 """
+
+
 @router.patch("/{user_id}", dependencies=[Depends(gcau)], response_model=UserPublic)
 async def update_user(
     *,
-    session: SessionDep, # type: ignore
+    session: SessionDep,  # type: ignore
     user_id: uuid.UUID,
     user_in: UserUpdate,
 ) -> Any:
@@ -144,10 +162,12 @@ async def update_user(
 """
 Delete user by id
 """
+
+
 @router.delete("/{user_id}", dependencies=[Depends(gcau)])
 async def delete_user(
     *,
-    session: SessionDep, # type: ignore
+    session: SessionDep,  # type: ignore
     user_id: uuid.UUID,
     current_user: CurrentUser,
 ) -> Message:
@@ -173,8 +193,10 @@ async def delete_user(
 """
 Sign up user
 """
+
+
 @router.post("/signup", response_model=User)
-async def register_user(session: SessionDep, user_in: UserRegister) -> UserPublic: # type: ignore
+async def register_user(session: SessionDep, user_in: UserRegister) -> UserPublic:  # type: ignore
     """
     Create new user without the need to be logged in.
     """

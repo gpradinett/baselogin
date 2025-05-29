@@ -13,9 +13,11 @@ from app import crud
 
 router = APIRouter(tags=["login"])
 
+
 @router.post("/login/access-token")
 async def login_access_token(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()] # type: ignore
+    session: SessionDep,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],  # type: ignore
 ) -> Token:
     """Login with access token."""
     user = crud.authenticate(

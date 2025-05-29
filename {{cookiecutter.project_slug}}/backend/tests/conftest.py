@@ -2,7 +2,7 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, delete
+from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.db import engine, init_db
@@ -24,6 +24,7 @@ def db() -> Generator[Session, None, None]:
         session.execute(statement)
         session.commit()
         """
+
 
 @pytest.fixture(scope="module")
 def client() -> Generator[TestClient, None, None]:

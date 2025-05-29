@@ -14,9 +14,11 @@ from app.core.db import engine
 from app.models import TokenPayload, User
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token",)
+    tokenUrl=f"{settings.API_V1_STR}/login/access-token",
+)
 
-def get_db() -> Generator[Session, None, None]: 
+
+def get_db() -> Generator[Session, None, None]:
     """Get a database session."""
     with Session(engine) as session:
         yield session
@@ -26,10 +28,12 @@ SessionDep = Annotated[Session, Depends(get_db)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
-def get_current_user(session: SessionDep, token: TokenDep) -> User: # type: ignore
+def get_current_user(session: SessionDep, token: TokenDep) -> User:  # type: ignore
     """Get the current user from the token."""
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
         token_data = TokenPayload(**payload)
     except (InvalidTokenError, ValidationError):
         raise HTTPException(
@@ -53,8 +57,7 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User: # type: igno
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-def get_current_active_superuser(
-    current_user: CurrentUser) -> User:
+def get_current_active_superuser(current_user: CurrentUser) -> User:
     """Get the current active superuser."""
     if not current_user.is_superuser:
         raise HTTPException(
