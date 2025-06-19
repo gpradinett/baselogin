@@ -4,6 +4,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 
+from app.core.config import settings
+
+from app.utils import generate_new_account_email, send_email
+
 from app import crud
 from app.api.deps import (
     CurrentUser,
@@ -93,6 +97,16 @@ async def create_user(
             detail="The user with this email already exists in the system.",
         )
     user = crud.create_user(session=session, user_create=user_in)
+    if settings.emails_enabled and user_in.email:
+        email_data = generate_new_account_email(
+            email_to=user_in.email,
+            username=user_in.email,
+            password=user_in.password,
+        )
+        send_email(
+            email_to=user_in.email,
+            email_data=email_data,
+        )
     print(user)
     return user
 
