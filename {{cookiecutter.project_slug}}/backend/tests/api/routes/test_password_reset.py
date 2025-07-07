@@ -29,7 +29,7 @@ def test_request_password_reset(client: TestClient, db: Session) -> None:
 
 
 def test_reset_password_valid_token(client: TestClient, db: Session) -> None:
-    user = UserFactory(session=db)
+    user, plain_password = UserFactory(session=db)
 
     # Simulate requesting a password reset
     token = "test_valid_token"
@@ -66,7 +66,7 @@ def test_reset_password_valid_token(client: TestClient, db: Session) -> None:
 def test_reset_password_invalid_or_expired_token(
     client: TestClient, db: Session, token: str, expected_detail: str, is_expired: bool
 ) -> None:
-    user = UserFactory(session=db)
+    user, plain_password = UserFactory(session=db)
 
     if is_expired:
         user.password_reset_token = token

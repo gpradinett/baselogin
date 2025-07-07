@@ -26,12 +26,12 @@ class UserFactory(factory.Factory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         session: Session = kwargs.pop("session")
-        password = kwargs.pop("password")  # Remove password from kwargs
+        plain_password = kwargs.pop("password")  # Get the plain password
         obj = model_class(**kwargs)
         session.add(obj)
         session.commit()
         session.refresh(obj)
-        return obj
+        return obj, plain_password
 
 
 class UserCreateFactory(factory.Factory):

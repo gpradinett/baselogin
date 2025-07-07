@@ -19,7 +19,7 @@ def user_authentication_headers(
     return headers
 
 
-def create_random_user(db: Session) -> User:
+def create_random_user(db: Session) -> tuple[User, str]:
     return UserFactory(session=db)
 
 
@@ -35,10 +35,12 @@ def authentication_token_from_email(
     if not user:
         user_in_create = UserCreateFactory.build(email=email)
         user = crud.create_user(session=db, user_create=user_in_create)
+        password = user_in_create.password
     else:
-        user_in_update = UserUpdate(password=UserCreateFactory.build().password)
+        password = UserCreateFactory.build().password
+        user_in_update = UserUpdate(password=password)
         if not user.id:
             raise Exception("User id not set")
         user = crud.update_user(session=db, db_user=user, user_in=user_in_update)
 
-    return user_authentication_headers(client=client, email=email, password=user_in_update.password)
+    return user_authentication_headers(client=client, email=email, password=password)
