@@ -62,5 +62,7 @@ dev-dependencies = [
   "pre-commit",
   "black",
   "isort",
-  "alembic"
+  "alembic",
+  "factory-boy",
+  "faker"
 ]
