@@ -10,6 +10,16 @@ from tests.factories import UserFactory, UserCreateFactory
 def user_authentication_headers(
     *, client: TestClient, email: str, password: str
 ) -> dict[str, str]:
+    """Generate authentication headers for a user.
+
+    Args:
+        client: The test client.
+        email: The user's email.
+        password: The user's password.
+
+    Returns:
+        A dictionary containing the Authorization header.
+    """
     data = {"username": email, "password": password}
 
     r = client.post(f"{settings.API_V1_STR}/login/access-token", data=data)
@@ -20,16 +30,32 @@ def user_authentication_headers(
 
 
 def create_random_user(db: Session) -> tuple[User, str]:
+    """Create a random user.
+
+    Args:
+        db: The database session.
+
+    Returns:
+        A tuple containing the user and the password.
+    """
     return UserFactory(session=db)
 
 
 def authentication_token_from_email(
     *, client: TestClient, email: str, db: Session
 ) -> dict[str, str]:
-    """
-    Return a valid token for the user with given email.
+    """Return a valid token for the user with given email.
 
     If the user doesn't exist it is created first.
+    If the user exists, their password is updated and a new token is generated.
+
+    Args:
+        client: The test client.
+        email: The user's email.
+        db: The database session.
+
+    Returns:
+        A dictionary containing the Authorization header.
     """
     user = crud.get_user_by_email(session=db, email=email)
     if not user:
