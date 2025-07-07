@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session
+from http import HTTPStatus
 
 from app.core.config import settings
 from app.models import UserCreate, UserRegister
@@ -13,7 +14,7 @@ def test_read_users(
     response = client.get(
         f"{settings.API_V1_STR}/users/", headers=superuser_token_headers
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json()["count"] > 1
 
 
@@ -26,7 +27,7 @@ def test_create_user_new_email(
         headers=superuser_token_headers,
         json=user_in.model_dump(mode='json', exclude={'create_at'}),
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json()["email"] == user_in.email
 
 
@@ -35,5 +36,5 @@ def test_signup_new_user(client: TestClient, db: Session) -> None:
     response = client.post(
         f"{settings.API_V1_STR}/users/signup", json=user_in.model_dump(exclude={'create_at'})
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json()["email"] == user_in.email

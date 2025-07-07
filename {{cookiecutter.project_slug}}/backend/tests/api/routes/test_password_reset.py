@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -18,7 +19,7 @@ def test_request_password_reset(client: TestClient, db: Session) -> None:
         f"{settings.API_V1_STR}/password-reset/request-password-reset",
         params={"email": user_in.email},
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"message": "Password reset email sent."}
 
     updated_user = crud.get_user_by_email(session=db, email=user_in.email)
@@ -45,7 +46,7 @@ def test_reset_password_valid_token(client: TestClient, db: Session) -> None:
             "new_password": new_password,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {"message": "Password reset successfully."}
 
     updated_user = crud.get_user_by_email(session=db, email=user.email)
@@ -82,5 +83,5 @@ def test_reset_password_invalid_or_expired_token(
             "new_password": new_password,
         },
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {"detail": expected_detail}
