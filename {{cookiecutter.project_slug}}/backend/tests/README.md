@@ -6,14 +6,34 @@ This document summarizes the current test coverage of the project. The overall t
 
 | File                                  | Statements | Missed | Coverage |
 | :------------------------------------ | :--------- | :----- | :------- |
+| `app/__init__.py`                     | 0          | 0      | 100%     |
+| `app/api/__init__.py`                 | 0          | 0      | 100%     |
 | `app/api/deps.py`                     | 35         | 2      | 94%      |
+| `app/api/main.py`                     | 6          | 0      | 100%     |
+| `app/api/routes/__init__.py`          | 0          | 0      | 100%     |
+| `app/api/routes/login.py`             | 19         | 0      | 100%     |
 | `app/api/routes/password_reset.py`    | 40         | 1      | 98%      |
 | `app/api/routes/users.py`             | 72         | 7      | 90%      |
+| `app/core/__init__.py`                | 0          | 0      | 100%     |
 | `app/core/config.py`                  | 49         | 2      | 96%      |
+| `app/core/db.py`                      | 11         | 0      | 100%     |
+| `app/core/security.py`                | 22         | 0      | 100%     |
+| `app/crud.py`                         | 44         | 0      | 100%     |
+| `app/main.py`                         | 19         | 0      | 100%     |
+| `app/models.py`                       | 48         | 0      | 100%     |
 | `app/utils.py`                        | 51         | 3      | 94%      |
+| `tests/__init__.py`                   | 0          | 0      | 100%     |
+| `tests/api/routes/__init__.py`        | 0          | 0      | 100%     |
+| `tests/api/routes/test_login.py`      | 29         | 0      | 100%     |
+| `tests/api/routes/test_password_reset.py` | 46         | 0      | 100%     |
+| `tests/api/routes/test_users.py`      | 61         | 0      | 100%     |
+| `tests/api/routes/test_users_coverage.py` | 24         | 0      | 100%     |
 | `tests/api/test_deps.py`              | 69         | 2      | 97%      |
 | `tests/conftest.py`                   | 45         | 1      | 98%      |
+| `tests/factories.py`                  | 48         | 0      | 100%     |
+| `tests/utils/__init__.py`             | 0          | 0      | 100%     |
 | `tests/utils/test_email_service.py`   | 15         | 3      | 80%      |
+| `tests/utils/test_user_utils.py`      | 28         | 0      | 100%     |
 | `tests/utils/user.py`                 | 27         | 1      | 96%      |
 
 ## Explanation of Missed Lines (Potential Scenarios)
