@@ -1,6 +1,7 @@
 from typing import Any
 
 from sqlmodel import Session, select
+from sqlalchemy import func
 
 from app.core.security import get_password_hash, verify_password
 from app.models import User, UserCreate, UserUpdate
@@ -43,3 +44,18 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
+
+
+def get_multiple_users(*, session: Session, skip: int, limit: int) -> dict[str, Any]:
+    count_statement = select(func.count()).select_from(User)
+    count = session.scalar(count_statement)
+
+    statement = select(User).offset(skip).limit(limit)
+    users = session.exec(statement).all()
+
+    return {"data": users, "count": count}
+
+def get_user_by_password_reset_token(*, session: Session, token: str) -> User | None:
+    statement = select(User).where(User.password_reset_token == token)
+    user = session.exec(statement).first()
+    return user

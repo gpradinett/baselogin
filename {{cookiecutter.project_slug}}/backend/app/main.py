@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,18 +15,20 @@ def custom_generate_unique_id(route: APIRouter) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 🔹 Lógica para inicializar la DB al arrancar
+    with Session(engine) as session:
+        init_db(session)
+    yield
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     generate_unique_id_function=custom_generate_unique_id,
+    lifespan=lifespan,
 )
-
-
-# 🔹 Lógica para inicializar la DB al arrancar
-@app.on_event("startup")
-def on_startup():
-    with Session(engine) as session:
-        init_db(session)
 
 
 # set all CORS enabled origins

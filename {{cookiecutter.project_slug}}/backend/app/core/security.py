@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import secrets
 
 import jwt
 from passlib.context import CryptContext
@@ -23,3 +24,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+def generate_password_reset_token(email: str) -> str:
+    return secrets.token_urlsafe(32)
+
+def get_password_reset_token_expire_time() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+def is_password_reset_token_expired(expires_at: datetime) -> bool:
+    return datetime.now(timezone.utc) > expires_at.replace(tzinfo=timezone.utc)

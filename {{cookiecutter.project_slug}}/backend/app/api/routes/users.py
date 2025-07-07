@@ -2,7 +2,6 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
 
 from app.core.config import settings
 
@@ -44,19 +43,10 @@ async def read_users(
     Get current user.
     """
 
-    count_statement = select(func.count()).select_from(User)
-    # print("count_statement", count_statement)
-    count = session.exec(count_statement).scalar()
-    print("count", count)
-
-    statement = select(User).offset(skip).limit(limit)
-    print("statement", statement)
-    users = session.exec(statement).scalars().all()
-    print("users", users)
-
+    users_data = crud.get_multiple_users(session=session, skip=skip, limit=limit)
     return UsersPublic(
-        data=users,
-        count=count,
+        data=users_data["data"],
+        count=users_data["count"],
     )
 
 

@@ -1,10 +1,11 @@
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
 
 from app.core.config import settings
 
 
-def test_get_access_token(client: TestClient) -> None:
+def test_get_access_token(client: TestClient, db: Session) -> None:
     login_data = {
         "username": settings.FIRST_SUPERUSER,
         "password": settings.FIRST_SUPERUSER_PASSWORD,

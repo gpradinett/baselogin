@@ -50,3 +50,17 @@ dependencies = [
   "psycopg",
   "ruff"
 ]
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.uv]
+dev-dependencies = [
+  "pytest",
+  "pytest-cov",
+  "mypy",
+  "pre-commit",
+  "black",
+  "isort",
+  "alembic"
+]

@@ -74,8 +74,9 @@ class Settings(BaseSettings):
     @property
     def emails_enabled(self) -> bool:
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
-    
+
     PROJECT_NAME: str = "FastAPI Auth"
     FRONTEND_HOST: str = "http://localhost:5173"
+
 
 settings = Settings()  # type: ignore

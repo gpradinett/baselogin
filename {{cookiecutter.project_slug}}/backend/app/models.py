@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from pydantic import EmailStr
 from sqlmodel import Field, SQLModel
 
@@ -9,13 +10,11 @@ class UserBase(SQLModel):
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
-    """
     name: str | None = Field(default=None, max_length=255)
     last_name: str | None = Field(default=None, max_length=255)
     cellphone: int | None = Field(default=None)
     has_mfa: bool = False
     create_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    """
 
 
 # Database model, database table inferred from class name
@@ -24,6 +23,8 @@ class User(UserBase, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str | None = Field(default=None, max_length=255)
+    password_reset_token: str | None = Field(default=None, index=True)
+    password_reset_token_expires: datetime | None = Field(default=None)
 
 
 # Properties to receive via API on creation
@@ -40,6 +41,8 @@ class UserPublic(UserBase):
 class UserUpdate(UserBase):
     email: EmailStr | None = Field(default=None, max_length=255)  # type: ignore
     password: str | None = Field(default=None, min_length=8, max_length=40)
+    password_reset_token: str | None = None
+    password_reset_token_expires: datetime | None = None
 
 
 class UsersPublic(SQLModel):
@@ -51,6 +54,8 @@ class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=40)
     full_name: str | None = Field(default=None, max_length=255)
+    name: str | None = Field(default=None, max_length=255)
+    last_name : str | None = Field(default=None, max_length=255)
 
 
 # Generate Message
@@ -67,3 +72,8 @@ class TokenPayload(SQLModel):
 class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class ResetPassword(SQLModel):
+    token: str
+    new_password: str
