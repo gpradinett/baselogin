@@ -1,3 +1,4 @@
+import pytest
 from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
@@ -54,30 +55,24 @@ def test_reset_password_valid_token(client: TestClient, db: Session) -> None:
     assert verify_password(new_password, updated_user.hashed_password)
 
 
-def test_reset_password_invalid_token(client: TestClient, db: Session) -> None:
-    user_in = UserCreateFactory.build()
-    crud.create_user(session=db, user_create=user_in)
-
-    response = client.post(
-        f"{settings.API_V1_STR}/password-reset/reset-password",
-        json={
-            "token": "invalid_token",
-            "new_password": "newtestpassword",
-        },
-    )
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid token."}
-
-
-def test_reset_password_expired_token(client: TestClient, db: Session) -> None:
+@pytest.mark.parametrize(
+    "token, expected_detail, is_expired",
+    [
+        ("invalid_token", "Invalid token.", False),
+        ("test_expired_token", "Token expired.", True),
+    ],
+)
+def test_reset_password_invalid_or_expired_token(
+    client: TestClient, db: Session, token: str, expected_detail: str, is_expired: bool
+) -> None:
     user = UserFactory(session=db)
 
-    # Simulate requesting a password reset with an expired token
-    token = "test_expired_token"
-    expires = datetime.now(timezone.utc) - timedelta(minutes=30)
-    user.password_reset_token = token
-    user.password_reset_token_expires = expires
-    db.add(user)
+    if is_expired:
+        user.password_reset_token = token
+        user.password_reset_token_expires = datetime.now(timezone.utc) - timedelta(
+            minutes=30
+        )
+        db.add(user)
 
     new_password = "newtestpassword"
     response = client.post(
@@ -88,4 +83,4 @@ def test_reset_password_expired_token(client: TestClient, db: Session) -> None:
         },
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "Token expired."}
+    assert response.json() == {"detail": expected_detail}
