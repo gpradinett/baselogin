@@ -2,7 +2,7 @@ import factory
 from faker import Faker
 from sqlmodel import Session
 
-from app.models import User, UserCreate
+from app.models import User, UserCreate, UserUpdate
 from app.core.security import get_password_hash
 
 faker = Faker()
@@ -43,3 +43,18 @@ class UserCreateFactory(factory.Factory):
     full_name = factory.LazyFunction(faker.name)
     name = factory.LazyFunction(faker.first_name)
     last_name = factory.LazyFunction(faker.last_name)
+
+
+class UserUpdateFactory(factory.Factory):
+    class Meta:
+        model = UserUpdate
+
+    email = factory.LazyFunction(faker.email)
+    password = factory.LazyFunction(faker.password)
+    full_name = factory.LazyFunction(faker.name)
+    name = factory.LazyFunction(faker.first_name)
+    last_name = factory.LazyFunction(faker.last_name)
+    cellphone = factory.LazyFunction(lambda: faker.random_int(min=100000000, max=2000000000))
+    is_active = factory.LazyFunction(faker.boolean)
+    is_superuser = factory.LazyFunction(faker.boolean)
+    has_mfa = factory.LazyFunction(faker.boolean)
