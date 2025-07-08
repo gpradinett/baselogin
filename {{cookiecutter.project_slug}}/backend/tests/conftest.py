@@ -9,7 +9,7 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import UserCreate
+from app.models import UserCreate, Client, ClientCreate
 from tests.utils.user import authentication_token_from_email
 
 
@@ -61,3 +61,17 @@ def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]
     return authentication_token_from_email(
         client=client, email=settings.EMAIL_TEST_USER, db=db
     )
+
+
+@pytest.fixture(scope="function")
+def test_client(db: Session, superuser_token_headers: dict[str, str]) -> Client:
+    client_in = ClientCreate(name="Test App", redirect_uris=["http://localhost/callback"], scopes=["read", "write"])
+    # We need to get the superuser ID from the token to set as owner_id
+    # This is a simplified way, in a real app you might decode the token or get the user from DB
+    # For testing, we can assume the superuser is created by init_db
+    superuser = crud.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    if not superuser:
+        raise Exception("Superuser not found for test client creation")
+    
+    created_client, _ = crud.create_client(session=db, client_create=client_in, owner_id=superuser.id)
+    return created_client
