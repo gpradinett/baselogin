@@ -25,6 +25,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
+def verify_client_secret(plain_secret: str, hashed_secret: str) -> bool:
+    return pwd_context.verify(plain_secret, hashed_secret)
+
+def get_client_secret_hash(secret: str) -> str:
+    return pwd_context.hash(secret)
+
 def generate_password_reset_token(email: str) -> str:
     return secrets.token_urlsafe(32)
 
