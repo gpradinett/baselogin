@@ -27,6 +27,7 @@ class User(UserBase, table=True):
     hashed_password: str | None = Field(default=None, max_length=255)
     password_reset_token: str | None = Field(default=None, index=True)
     password_reset_token_expires: datetime | None = Field(default=None)
+    google_id: str | None = Field(default=None, unique=True, index=True) # Added for Google OAuth
 
 
 # Shared properties for Client
