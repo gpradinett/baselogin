@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from app.models import Token, UserCreate
 
-router = APIRouter()
+router = APIRouter(prefix="/auth/google", tags=["google auth"])
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
