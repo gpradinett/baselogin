@@ -9,7 +9,7 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import UserCreate, Client, ClientCreate
+from app.models import UserCreate, Client, ClientCreate, User
 from tests.utils.user import authentication_token_from_email
 
 
@@ -61,6 +61,17 @@ def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]
     return authentication_token_from_email(
         client=client, email=settings.EMAIL_TEST_USER, db=db
     )
+
+
+@pytest.fixture(scope="function")
+def normal_user(db: Session) -> User:
+    user_in = UserCreate(
+        email="normal_user@example.com",
+        password="password123",
+        full_name="Normal User",
+    )
+    user = crud.create_user(session=db, user_create=user_in)
+    return user
 
 
 @pytest.fixture(scope="function")
