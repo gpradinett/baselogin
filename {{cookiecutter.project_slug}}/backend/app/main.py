@@ -12,7 +12,9 @@ from app.core.config import settings
 
 
 def custom_generate_unique_id(route: APIRouter) -> str:
-    return f"{route.tags[0]}-{route.name}"
+    if route.tags:
+        return f"{route.tags[0]}-{route.name}"
+    return route.name
 
 
 @asynccontextmanager
