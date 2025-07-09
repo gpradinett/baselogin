@@ -11,6 +11,9 @@ print(f"Connecting to database: {settings.SQLALCHEMY_DATABASE_URI}")
 
 def init_db(session: Session) -> None:
     """Create the database tables and the first superuser if not exists."""
+    
+    # 🧱 Create tables if they do not exist
+    SQLModel.metadata.create_all(engine)
 
     user = crud.get_user_by_email(session=session, email=settings.FIRST_SUPERUSER)
     if not user:
