@@ -97,6 +97,7 @@ class ClientUpdate(ClientBase):
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=40)
+    google_id: str | None = None
 
 
 # Properties to return via API, id is always required
