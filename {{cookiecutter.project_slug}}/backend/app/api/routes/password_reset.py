@@ -11,7 +11,7 @@ from app import crud
 from app.utils import generate_password_reset_email, send_email
 from app.core import security
 
-router = APIRouter(tags=["password-reset"])
+router = APIRouter(prefix="/password-reset", tags=["login"])
 
 
 @router.post("/request-password-reset", response_model=Message)
