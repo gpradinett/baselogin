@@ -8,7 +8,7 @@ from app import crud
 from app.api.deps import SessionDep, get_current_active_superuser
 from app.models import Client, ClientCreate, ClientPublic, ClientUpdate, Message, ClientCreateResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/clients", tags=["clients"])
 
 
 @router.post("/", response_model=ClientCreateResponse)
