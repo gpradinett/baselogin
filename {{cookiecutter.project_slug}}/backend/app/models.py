@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime, timezone
-from typing import List # Added this import
+from typing import List
 from pydantic import EmailStr
 from sqlmodel import Field, SQLModel
-import sqlalchemy as sa # Added this import
+from sqlalchemy.dialects.postgresql import JSONB
+import sqlalchemy as sa
 
 
 # shared properties
@@ -37,8 +38,8 @@ class ClientBase(SQLModel):
     Represents an application or service that interacts with the authentication system.
     """
     name: str = Field(index=True, max_length=255)
-    redirect_uris: List[str] = Field(default_factory=list, sa_column=sa.Column(sa.JSON))
-    scopes: List[str] = Field(default_factory=list, sa_column=sa.Column(sa.JSON))
+    redirect_uris: List[str] = Field(default_factory=list, sa_column=sa.Column(JSONB))
+    scopes: List[str] = Field(default_factory=list, sa_column=sa.Column(JSONB))
     is_active: bool = True
 
 
