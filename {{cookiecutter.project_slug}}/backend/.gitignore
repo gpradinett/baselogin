@@ -1,3 +1,7 @@
 # Gemini session files
 GEMINI.md
 commit_message.txt
+
+# Local environment files
+.python-version
+alembic/
