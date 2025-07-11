@@ -1,27 +1,33 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
+from pydantic import ValidationError
+from pydantic import ValidationError
 from sqlmodel import Session
 
-from app import crud
+from app.crud import client as crud_client
 from app.api.deps import SessionDep, get_current_active_superuser
 from app.models import Client, ClientCreate, ClientPublic, ClientUpdate, Message, ClientCreateResponse
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
 
+from app.services.client_service import ClientService
+
+def get_client_service(session: Session = Depends(SessionDep)) -> ClientService:
+    return ClientService(session)
+
 @router.post("/", response_model=ClientCreateResponse)
 def create_client(
-    client_in: ClientCreate,
-    session: SessionDep,
+    client_in: ClientCreate = Body(...),
+    client_service: ClientService = Depends(get_client_service),
     current_user: Client = Depends(get_current_active_superuser),
 ) -> Any:
     """
     Create new client.
     """
-    db_client, client_secret = crud.create_client(session=session, client_create=client_in, owner_id=current_user.id)
-    return ClientCreateResponse(client_secret=client_secret, **db_client.model_dump())
+    return client_service.create_client(client_in=client_in, owner_id=current_user.id)
 
 
 @router.get("/{client_id}", response_model=ClientPublic)
@@ -33,10 +39,7 @@ def read_client(
     """
     Get client by ID.
     """
-    client = crud.get_client_by_client_id(session=session, client_id=client_id)
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
-    return client
+    return crud_client.get_client_by_client_id(session=session, client_id=client_id)
 
 
 @router.put("/{client_id}", response_model=ClientPublic)
@@ -49,11 +52,8 @@ def update_client(
     """
     Update a client.
     """
-    client = crud.get_client_by_client_id(session=session, client_id=client_id)
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
-    client = crud.update_client(session=session, db_client=client, client_in=client_in)
-    return client
+    client = crud_client.get_client_by_client_id(session=session, client_id=client_id)
+    return crud_client.update_client(session=session, db_client=client, client_in=client_in)
 
 
 @router.delete("/{client_id}", response_model=Message)
@@ -65,10 +65,8 @@ def delete_client(
     """
     Delete a client.
     """
-    client = crud.get_client_by_client_id(session=session, client_id=client_id)
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
-    crud.delete_client(session=session, db_client=client)
+    client = crud_client.get_client_by_client_id(session=session, client_id=client_id)
+    crud_client.delete_client(session=session, db_client=client)
     return {"message": "Client deleted successfully"}
 
 
@@ -82,5 +80,4 @@ def read_clients(
     """
     Retrieve clients.
     """
-    clients = crud.get_multiple_clients(session=session, skip=skip, limit=limit)
-    return clients
+    return crud_client.get_multiple_clients(session=session, skip=skip, limit=limit)
