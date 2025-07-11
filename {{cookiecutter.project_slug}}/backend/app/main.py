@@ -1,14 +1,16 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.routing import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import ValidationError
 
 from sqlmodel import Session
 
 from app.api.main import api_router
 from app.core.db import init_db, engine
 from app.core.config import settings
+from app.api.errors.handlers import http_exception_handler, validation_exception_handler
 
 
 def custom_generate_unique_id(route: APIRouter) -> str:
@@ -31,6 +33,9 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
     lifespan=lifespan,
 )
+
+app.exception_handler(HTTPException)(http_exception_handler)
+app.exception_handler(ValidationError)(validation_exception_handler)
 
 
 # set all CORS enabled origins
