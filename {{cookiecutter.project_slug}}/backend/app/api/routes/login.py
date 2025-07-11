@@ -9,7 +9,7 @@ from app.core import security
 from app.api.deps import SessionDep
 from app.core.config import settings
 from app.models import Token
-from app import crud
+from app.crud import user as crud_user
 
 router = APIRouter(tags=["login"])
 
@@ -20,7 +20,7 @@ async def login_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],  # type: ignore
 ) -> Token:
     """Login with access token."""
-    user = crud.authenticate(
+    user = crud_user.authenticate(
         session=session,
         email=form_data.username,
         password=form_data.password,
