@@ -27,7 +27,7 @@ def test_update_user_email_conflict(
     assert response.json() == {"detail": "The user with this email already exists in the system."}
 
 
-def test_create_user_email_sending_enabled(client: TestClient, db: Session) -> None:
+def test_create_user_email_sending_enabled(client: TestClient, db: Session, superuser_token_headers: dict[str, str]) -> None:
     """
     Test that email sending logic is covered when emails are enabled.
     This test will require mocking the send_email and generate_new_account_email functions.
@@ -37,7 +37,7 @@ def test_create_user_email_sending_enabled(client: TestClient, db: Session) -> N
     import app.core.config
     from unittest.mock import patch, PropertyMock
 
-    with patch.object(app.api.routes.users, 'send_email') as mock_send_email,          patch.object(app.api.routes.users, 'generate_new_account_email') as mock_generate_email,          patch.object(app.api.routes.users, 'settings') as mock_settings,          patch.object(app.crud, 'get_user_by_email', return_value=None) as mock_get_user_by_email:
+    with patch.object(app.services.user_service, 'send_email') as mock_send_email,          patch.object(app.services.user_service, 'generate_new_account_email') as mock_generate_email,          patch.object(app.services.user_service, 'settings') as mock_settings,          patch.object(app.crud.user, 'get_user_by_email', return_value=None) as mock_get_user_by_email:
 
         mock_settings.emails_enabled = True
         mock_generate_email.return_value = {"subject": "Test", "body": "Test"}
@@ -46,7 +46,7 @@ def test_create_user_email_sending_enabled(client: TestClient, db: Session) -> N
         response = client.post(
             f"{settings.API_V1_STR}/users/",
             content=user_in.model_dump_json(),
-            headers={'Content-Type': 'application/json'}
+            headers={**superuser_token_headers, 'Content-Type': 'application/json'}
         )
         assert response.status_code == 200
         mock_send_email.assert_called_once()
