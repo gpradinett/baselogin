@@ -1,9 +1,10 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app import crud
+from app.crud import user as crud_user
 from app.core.config import settings
 from app.models import User
+from app.core.security import get_password_hash
 from tests.factories import UserCreateFactory
 from tests.utils.user import (
     authentication_token_from_email,
@@ -19,7 +20,7 @@ def test_create_random_user(db: Session) -> None:
     assert user
     assert password
     assert user.email
-    db_user = crud.get_user_by_email(session=db, email=user.email)
+    db_user = crud_user.get_user_by_email(session=db, email=user.email)
     assert db_user
     assert db_user.email == user.email
 
@@ -36,6 +37,9 @@ def test_authentication_token_from_email_new_user(
     assert headers["Authorization"].startswith("Bearer ")
 
 
+from app.core.security import get_password_hash
+
+
 def test_authentication_token_from_email_existing_user(
     client: TestClient, db: Session
 ) -> None:
@@ -46,7 +50,10 @@ def test_authentication_token_from_email_existing_user(
     # 1. Create an existing user
     password_before = "old_password123"
     user_in_create = UserCreateFactory.build(password=password_before)
-    user = crud.create_user(session=db, user_create=user_in_create)
+    user_to_create = User.model_validate(
+        user_in_create, update={"hashed_password": get_password_hash(password_before)}
+    )
+    user = crud_user.create_user(session=db, user=user_to_create)
 
     # 2. Get token for the existing user
     headers = authentication_token_from_email(client=client, email=user.email, db=db)
@@ -54,4 +61,4 @@ def test_authentication_token_from_email_existing_user(
 
     # 3. Verify password has been updated
     db.refresh(user)
-    assert not crud.verify_password(password_before, user.hashed_password)
+    assert not crud_user.verify_password(password_before, user.hashed_password)
