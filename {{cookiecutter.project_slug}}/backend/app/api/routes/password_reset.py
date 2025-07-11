@@ -7,7 +7,7 @@ from pydantic import EmailStr
 from app.core.config import settings
 from app.api.deps import SessionDep
 from app.models import User, Message, ResetPassword
-from app import crud
+from app.crud import user as crud_user
 from app.utils import generate_password_reset_email, send_email
 from app.core import security
 
@@ -21,7 +21,7 @@ async def request_password_reset(
 ) -> Any:
     """Request password reset token.
     """
-    user = crud.get_user_by_email(session=session, email=email)
+    user = crud_user.get_user_by_email(session=session, email=email)
     if not user:
         raise HTTPException(
             status_code=404, detail="User with this email does not exist."
@@ -55,7 +55,7 @@ async def reset_password(
 ) -> Any:
     """Reset password using token.
     """
-    user = crud.get_user_by_password_reset_token(session=session, token=body.token)
+    user = crud_user.get_user_by_password_reset_token(session=session, token=body.token)
     if not user:
         raise HTTPException(status_code=400, detail="Invalid token.")
 
