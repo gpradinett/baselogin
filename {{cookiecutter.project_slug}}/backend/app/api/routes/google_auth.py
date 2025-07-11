@@ -1,5 +1,6 @@
 from typing import Any
 
+import jwt
 import httpx
 import uuid # Added this import
 from datetime import timedelta # Added this import
@@ -7,11 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from app import crud
+from app.crud import user as crud_user
 from app.api.deps import SessionDep
 from app.core.config import settings
-from app.core.security import create_access_token
-from app.models import Token, UserCreate
+from app.core.security import create_access_token, get_password_hash
+from app.models import Token, UserCreate, User
 
 router = APIRouter(prefix="/auth/google", tags=["google auth"])
 
@@ -82,7 +83,7 @@ async def google_callback(code: str, session: SessionDep) -> Any:
         if not email or not google_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing user info from Google")
 
-        user = crud.get_user_by_email(session=session, email=email)
+        user = crud_user.get_user_by_email(session=session, email=email)
 
         if user:
             # User exists, link Google ID if not already linked
@@ -102,13 +103,17 @@ async def google_callback(code: str, session: SessionDep) -> Any:
             # Note: We don't get a password from Google, so we'll create a dummy one or handle it differently
             # For simplicity, we'll create a user without a password here, or you might enforce password creation later
             # Or, if you want to allow login only via Google, you might not need a password field for Google-only users
+            password = str(uuid.uuid4()) # Dummy password for now, or handle differently
             new_user_in = UserCreate(
                 email=email,
                 full_name=full_name,
                 google_id=google_id,
-                password=str(uuid.uuid4()), # Dummy password for now, or handle differently
+                password=password,
             )
-            new_user = crud.create_user(session=session, user_create=new_user_in)
+            user_to_create = User.model_validate(
+                new_user_in, update={"hashed_password": get_password_hash(password)}
+            )
+            new_user = crud_user.create_user(session=session, user=user_to_create)
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             return Token(
                 access_token=create_access_token(new_user.id, access_token_expires),
