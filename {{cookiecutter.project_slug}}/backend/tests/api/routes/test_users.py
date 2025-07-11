@@ -3,7 +3,8 @@ from sqlmodel import Session
 from http import HTTPStatus
 
 from app.core.config import settings
-from app.models import UserCreate, UserRegister, UserUpdate
+from app.models import UserCreate, UserRegister, UserUpdate, User
+from app.crud import user as crud_user
 from tests.factories import UserFactory, UserCreateFactory
 
 
@@ -80,7 +81,7 @@ def test_update_user_not_found(
         json=user_update.model_dump(mode='json', exclude_unset=True),
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert "User not found" in response.json()["detail"]
+    assert "The user with this username does not exist in the system." in response.json()["detail"]
 
 
 def test_update_user_existing_email(
@@ -106,7 +107,9 @@ def test_delete_user(
         f"{settings.API_V1_STR}/users/{user.id}", headers=superuser_token_headers
     )
     assert response.status_code == HTTPStatus.OK
-    assert "User deleted successfully" in response.json()["message"]
+    response_user = response.json()
+    assert response_user["id"] == str(user.id)
+    assert response_user["email"] == user.email
 
 
 def test_delete_user_not_found(
@@ -117,7 +120,7 @@ def test_delete_user_not_found(
         f"{settings.API_V1_STR}/users/{non_existent_id}", headers=superuser_token_headers
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert "User not found" in response.json()["detail"]
+    assert "The user with this username does not exist in the system." in response.json()["detail"]
 
 
 def test_delete_self_superuser(
@@ -127,4 +130,14 @@ def test_delete_self_superuser(
         f"{settings.API_V1_STR}/users/me", headers=superuser_token_headers
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
-    assert "Superuser cannot delete himself." in response.json()["detail"]
+    assert "Superusers can't delete themselves." in response.json()["detail"]
+
+
+def test_delete_user_self_superuser(
+    client: TestClient, superuser_token_headers: dict[str, str], superuser: User
+) -> None:
+    response = client.delete(
+        f"{settings.API_V1_STR}/users/{superuser.id}", headers=superuser_token_headers
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert "Superusers can't delete themselves." in response.json()["detail"]
