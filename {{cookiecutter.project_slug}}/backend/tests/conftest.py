@@ -4,7 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel
 
-from app import crud
+from app.crud import user as crud_user
+from app.crud import client as crud_client
 from app.api.deps import get_db
 from app.core.config import settings
 from app.core.db import engine, init_db
@@ -70,7 +71,16 @@ def normal_user(db: Session) -> User:
         password="password123",
         full_name="Normal User",
     )
-    user = crud.create_user(session=db, user_create=user_in)
+    user = crud_user.create_user(session=db, user_create=user_in)
+    return user
+
+
+@pytest.fixture(scope="function")
+def superuser(db: Session) -> User:
+    init_db(db)
+    user = crud_user.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    if not user:
+        raise Exception("Superuser not found")
     return user
 
 
@@ -80,9 +90,9 @@ def test_client(db: Session, superuser_token_headers: dict[str, str]) -> Client:
     # We need to get the superuser ID from the token to set as owner_id
     # This is a simplified way, in a real app you might decode the token or get the user from DB
     # For testing, we can assume the superuser is created by init_db
-    superuser = crud.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    superuser = crud_user.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
     if not superuser:
         raise Exception("Superuser not found for test client creation")
     
-    created_client, _ = crud.create_client(session=db, client_create=client_in, owner_id=superuser.id)
+    created_client, _ = crud_client.create_client(session=db, client_create=client_in, owner_id=superuser.id)
     return created_client
