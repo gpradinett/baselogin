@@ -5,7 +5,7 @@ from http import HTTPStatus
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app import crud
+from app.crud import user as crud_user
 from app.core.config import settings
 from app.core.security import verify_password
 from tests.factories import UserFactory, UserCreateFactory
@@ -13,7 +13,7 @@ from tests.factories import UserFactory, UserCreateFactory
 
 def test_request_password_reset(client: TestClient, db: Session) -> None:
     user_in = UserCreateFactory.build()
-    crud.create_user(session=db, user_create=user_in)
+    crud_user.create_user(session=db, user_create=user_in)
 
     response = client.post(
         f"{settings.API_V1_STR}/password-reset/request-password-reset",
@@ -22,7 +22,7 @@ def test_request_password_reset(client: TestClient, db: Session) -> None:
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"message": "Password reset email sent."}
 
-    updated_user = crud.get_user_by_email(session=db, email=user_in.email)
+    updated_user = crud_user.get_user_by_email(session=db, email=user_in.email)
     assert updated_user
     assert updated_user.password_reset_token is not None
     assert updated_user.password_reset_token_expires is not None
@@ -49,7 +49,7 @@ def test_reset_password_valid_token(client: TestClient, db: Session) -> None:
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"message": "Password reset successfully."}
 
-    updated_user = crud.get_user_by_email(session=db, email=user.email)
+    updated_user = crud_user.get_user_by_email(session=db, email=user.email)
     assert updated_user
     assert updated_user.password_reset_token is None
     assert updated_user.password_reset_token_expires is None
