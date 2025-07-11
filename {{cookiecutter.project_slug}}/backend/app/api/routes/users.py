@@ -1,216 +1,96 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session
 
 from app.core.config import settings
-
-from app.utils import generate_new_account_email, send_email
-
-from app import crud
-from app.api.deps import (
-    CurrentUser,
-    SessionDep,
-)
-from app.api.deps import get_current_active_superuser as gcau
-from app.models import (
-    User,
-    UserCreate,
-    UsersPublic,
-    UserPublic,
-    Message,
-    UserUpdate,
-    UserRegister,
-)
-
+from app.utils.email_utils import generate_new_account_email, send_email
+from app.crud import user as crud_user
+from app.api import deps
+from app import models
+from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+def get_user_service(db: Session = Depends(deps.get_db)) -> UserService:
+    return UserService(db)
 
-"""
-Get all users
-"""
-
-
-@router.get("/", dependencies=[Depends(gcau)], response_model=UsersPublic)
-async def read_users(
-    *,
-    session: SessionDep,  # type: ignore
+@router.get("/", response_model=models.UsersPublic)
+def read_users(
+    session: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
-    Get current user.
+    Retrieve users.
     """
-
-    users_data = crud.get_multiple_users(session=session, skip=skip, limit=limit)
-    return UsersPublic(
+    users_data = crud_user.get_multiple_users(session=session, skip=skip, limit=limit)
+    return models.UsersPublic(
         data=users_data["data"],
         count=users_data["count"],
     )
 
-
-"""
-Get current user
-"""
-
-
-@router.get("/me", response_model=UserPublic)
-async def read_user_me(
-    current_user: CurrentUser,
-) -> Any:
-    """
-    Get current user.
-    """
-    print("Current user:", current_user)
-    return current_user
-
-
-"""
-Create new user
-"""
-
-
-@router.post("/", response_model=UserPublic)
-async def create_user(
-    *,
-    session: SessionDep,  # type: ignore
-    user_in: UserCreate,
+@router.post("/", response_model=models.User)
+def create_user(
+    *, 
+    user_in: models.UserCreate,
+    user_service: UserService = Depends(get_user_service),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
     Create new user.
     """
-    user = crud.get_user_by_email(session=session, email=user_in.email)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this email already exists in the system.",
-        )
-    user = crud.create_user(session=session, user_create=user_in)
-    
-    if settings.emails_enabled and user_in.email:
-        email_data = generate_new_account_email(
-            email_to=user_in.email,
-            username=user_in.email,
-            password=user_in.password,
-        )
-        send_email(
-            email_to=user_in.email,
-            email_data=email_data,
-        )
-    print(user)
-    return user
+    return user_service.create_user(user_in=user_in)
 
-
-"""
-Delete user
-"""
-
-
-@router.delete("/me", response_model=Message)
-async def delete_user_me(
-    current_user: CurrentUser,
-    session: SessionDep,  # type: ignore
-) -> Any:
-    """
-    Delete current user.
-    """
-    if current_user.is_superuser:
-        raise HTTPException(
-            status_code=400,
-            detail="Superuser cannot delete himself.",
-        )
-    session.delete(current_user)
-    session.commit()
-    return Message(message="User deleted successfully.")
-
-
-"""
-Update user
-"""
-
-
-@router.patch("/{user_id}", dependencies=[Depends(gcau)], response_model=UserPublic)
-async def update_user(
-    *,
-    session: SessionDep,  # type: ignore
-    user_id: uuid.UUID,
-    user_in: UserUpdate,
-) -> Any:
-    """
-    Update user by id.
-    """
-    db_user = session.get(User, user_id)
-    if not db_user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found.",
-        )
-    if user_in.email:
-        existing_user = crud.get_user_by_email(
-            session=session,
-            email=user_in.email,
-        )
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=400,
-                detail="The user with this email already exists in the system.",
-            )
-    db_user = crud.update_user(
-        session=session,
-        db_user=db_user,
-        user_in=user_in,
-    )
-    return db_user
-
-
-"""
-Delete user by id
-"""
-
-
-@router.delete("/{user_id}", dependencies=[Depends(gcau)])
-async def delete_user(
-    *,
-    session: SessionDep,  # type: ignore
-    user_id: uuid.UUID,
-    current_user: CurrentUser,
-) -> Message:
-    """
-    Delete user by id.
-    """
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found.",
-        )
-    if user == current_user:
-        raise HTTPException(
-            status_code=403,
-            detail="You cannot delete yourself.",
-        )
-    session.delete(user)
-    session.commit()
-    return Message(message="User deleted successfully.")
-
-
-"""
-Sign up user
-"""
-
-
-@router.post("/signup", response_model=User)
-async def register_user(session: SessionDep, user_in: UserRegister) -> UserPublic:  # type: ignore
+@router.post("/signup", response_model=models.User)
+def register_user(user_in: models.UserRegister, session: Session = Depends(deps.get_db)) -> Any:
     """
     Create new user without the need to be logged in.
     """
-    user = crud.get_user_by_email(session=session, email=user_in.email)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this email already exists in the system.",
-        )
-    user_create = UserCreate.model_validate(user_in)
-    user = crud.create_user(session=session, user_create=user_create)
+    user_create = models.UserCreate.model_validate(user_in)
+    user = crud_user.create_user(session=session, user_create=user_create)
     return user
+
+@router.get("/me", response_model=models.User)
+def read_user_me(current_user: models.User = Depends(deps.get_current_user)) -> Any:
+    """
+    Get current user.
+    """
+    return current_user
+
+@router.delete("/me", response_model=models.Message)
+def delete_user_me(
+    user_service: UserService = Depends(get_user_service),
+    current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Delete own user.
+    """
+    result = user_service.delete_user_me(current_user=current_user)
+    print(result)
+    return result
+
+@router.patch("/{user_id}", response_model=models.User)
+def update_user(
+    user_id: UUID,
+    user_in: models.UserUpdate,
+    user_service: UserService = Depends(get_user_service),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> models.User:
+    """
+    Update a user.
+    """
+    return user_service.update_user(user_id=user_id, user_in=user_in)
+
+@router.delete("/{user_id}")
+def delete_user(
+    user_id: UUID,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    user_service: UserService = Depends(get_user_service),
+) -> models.User:
+    """
+    Delete a user.
+    """
+    return user_service.delete_user(user_id=user_id, current_user=current_user)
