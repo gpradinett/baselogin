@@ -1,24 +1,22 @@
 from typing import Any
 import uuid
-from fastapi import HTTPException
 
 from sqlmodel import Session, select
 from sqlalchemy import func
 
-from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate
+from app.models import User
 
 
 def create_user(*, session: Session, user: User) -> User:
     """
-    Crea un nuevo usuario en la base de datos.
+    Creates a new user in the database.
 
     Args:
-        session: La sesión de la base de datos.
-        user: El objeto User a crear.
+        session: The database session.
+        user: The User object to create.
 
     Returns:
-        El objeto User creado.
+        The created User object.
     """
     session.add(user)
     session.commit()
@@ -28,15 +26,15 @@ def create_user(*, session: Session, user: User) -> User:
 
 def update_user(*, session: Session, db_user: User, user_data: dict[str, Any]) -> User:
     """
-    Actualiza un usuario existente en la base de datos.
+    Updates an existing user in the database.
 
     Args:
-        session: La sesión de la base de datos.
-        db_user: El objeto User existente a actualizar.
-        user_data: Un diccionario con los datos a actualizar.
+        session: The database session.
+        db_user: The existing User object to update.
+        user_data: A dictionary with the data to update.
 
     Returns:
-        El objeto User actualizado.
+        The updated User object.
     """
     db_user.sqlmodel_update(user_data)
     session.add(db_user)
@@ -47,28 +45,28 @@ def update_user(*, session: Session, db_user: User, user_data: dict[str, Any]) -
 
 def get_user_by_id(*, session: Session, user_id: uuid.UUID) -> User | None:
     """
-    Obtiene un usuario por su ID.
+    Retrieves a user by their ID.
 
     Args:
-        session: La sesión de la base de datos.
-        user_id: El ID del usuario.
+        session: The database session.
+        user_id: The ID of the user.
 
     Returns:
-        El objeto User si se encuentra, de lo contrario None.
+        The User object if found, otherwise None.
     """
     return session.get(User, user_id)
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
     """
-    Obtiene un usuario por su dirección de correo electrónico.
+    Retrieves a user by their email address.
 
     Args:
-        session: La sesión de la base de datos.
-        email: La dirección de correo electrónico del usuario.
+        session: The database session.
+        email: The email address of the user.
 
     Returns:
-        El objeto User si se encuentra, de lo contrario None.
+        The User object if found, otherwise None.
     """
     statement = select(User).where(User.email == email)
     return session.exec(statement).first()
@@ -76,15 +74,15 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
 
 def get_multiple_users(*, session: Session, skip: int, limit: int) -> dict[str, Any]:
     """
-    Obtiene múltiples usuarios con paginación.
+    Retrieves multiple users with pagination.
 
     Args:
-        session: La sesión de la base de datos.
-        skip: El número de registros a omitir.
-        limit: El número máximo de registros a devolver.
+        session: The database session.
+        skip: The number of records to skip.
+        limit: The maximum number of records to return.
 
     Returns:
-        Un diccionario con la lista de usuarios y el conteo total.
+        A dictionary with the list of users and the total count.
     """
     count_statement = select(func.count()).select_from(User)
     count = session.scalar(count_statement)
@@ -95,14 +93,14 @@ def get_multiple_users(*, session: Session, skip: int, limit: int) -> dict[str, 
 
 def get_user_by_password_reset_token(*, session: Session, token: str) -> User | None:
     """
-    Obtiene un usuario por su token de restablecimiento de contraseña.
+    Retrieves a user by their password reset token.
 
     Args:
-        session: La sesión de la base de datos.
-        token: El token de restablecimiento de contraseña.
+        session: The database session.
+        token: The password reset token.
 
     Returns:
-        El objeto User si se encuentra, de lo contrario None.
+        The User object if found, otherwise None.
     """
     statement = select(User).where(User.password_reset_token == token)
     return session.exec(statement).first()
