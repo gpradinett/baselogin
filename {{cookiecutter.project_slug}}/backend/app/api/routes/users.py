@@ -41,13 +41,14 @@ def create_user(
     return user_service.create_user(user_in=user_in)
 
 @router.post("/signup", response_model=models.User)
-def register_user(user_in: models.UserRegister, session: Session = Depends(deps.get_db)) -> Any:
+def register_user(
+    user_in: models.UserRegister,
+    user_service: UserService = Depends(get_user_service),
+) -> Any:
     """
     Create new user without the need to be logged in.
     """
-    user_create = models.UserCreate.model_validate(user_in)
-    user = crud_user.create_user(session=session, user_create=user_create)
-    return user
+    return user_service.create_user(user_in=user_in)
 
 @router.get("/me", response_model=models.User)
 def read_user_me(current_user: models.User = Depends(deps.get_current_user)) -> Any:
