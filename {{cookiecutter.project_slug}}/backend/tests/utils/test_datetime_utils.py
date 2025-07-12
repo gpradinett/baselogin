@@ -1,5 +1,5 @@
 import pytest
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import pytz
 from unittest.mock import patch
 
@@ -18,8 +18,8 @@ def test_expired_token():
     # Since the function uses datetime.utcnow(), we can't assert an exact datetime
     # Instead, we check if the returned datetime is approximately 18000 seconds in the future
     future_time = Dates.expired_token()
-    assert future_time > datetime.utcnow()
-    assert future_time < datetime.utcnow() + timedelta(seconds=18001) # Allow for slight time difference
+    assert future_time > datetime.now(timezone.utc)
+    assert future_time < datetime.now(timezone.utc) + timedelta(seconds=18001) # Allow for slight time difference
 
 @patch('app.utils.datetime_utils.datetime')
 def test_get_client_today(mock_datetime):
