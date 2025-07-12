@@ -65,9 +65,18 @@ def delete_user_me(
     """
     Delete own user.
     """
-    result = user_service.delete_user_me(current_user=current_user)
-    print(result)
-    return result
+    return user_service.delete_user_me(current_user=current_user)
+
+@router.patch("/me", response_model=models.User)
+def update_user_me(
+    user_in: models.UserUpdate,
+    user_service: UserService = Depends(get_user_service),
+    current_user: models.User = Depends(deps.get_current_user),
+) -> models.User:
+    """
+    Update own user.
+    """
+    return user_service.update_user_me(user_in=user_in, current_user=current_user)
 
 @router.patch("/{user_id}", response_model=models.User)
 def update_user(
