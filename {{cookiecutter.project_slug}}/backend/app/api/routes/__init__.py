@@ -1,1 +1,1 @@
-from . import users, login, password_reset, clients, google_auth
+from . import users as users, login as login, password_reset as password_reset, clients as clients, google_auth as google_auth
