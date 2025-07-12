@@ -1,12 +1,9 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
-from app.core.config import settings
-from app.utils.email_utils import generate_new_account_email, send_email
-from app.crud import user as crud_user
 from app.api import deps
 from app import models
 from app.services.user_service import UserService

@@ -5,7 +5,6 @@ from typing import Any
 from jinja2 import Template
 
 from app.core.config import settings
-from app.core import security
 
 import smtplib
 from email.mime.multipart import MIMEMultipart

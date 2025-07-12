@@ -1,6 +1,6 @@
 import pytest
 from typing import Any
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, MagicMock
 import httpx
 from fastapi import status
 from fastapi.testclient import TestClient

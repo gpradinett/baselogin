@@ -1,12 +1,10 @@
 from typing import Any
 
-import jwt
 import httpx
 import uuid # Added this import
 from datetime import timedelta # Added this import
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import RedirectResponse
-from sqlmodel import Session
 
 from app.crud import user as crud_user
 from app.api.deps import SessionDep

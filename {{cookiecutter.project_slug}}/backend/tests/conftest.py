@@ -10,7 +10,7 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.core.security import get_password_hash, verify_password
+from app.core.security import get_password_hash
 from app.models import UserCreate, Client, ClientCreate, User
 from tests.utils.user import authentication_token_from_email
 
