@@ -1,9 +1,8 @@
-import pytest
 from datetime import date, datetime, timedelta, timezone
 import pytz
 from unittest.mock import patch
 
-from app.utils.datetime_utils import Dates, PASS_DAYS, IST
+from app.utils.datetime_utils import Dates, PASS_DAYS
 
 def test_get_today():
     assert Dates.get_today() == date.today()
@@ -30,14 +29,14 @@ def test_get_client_today(mock_datetime):
 def test_limit_password_change_within_limit():
     # Test when password change is within the limit (e.g., 5 days old)
     created_date = date.today() - timedelta(days=5)
-    assert Dates.limit_password_change(created_date) == True
+    assert Dates.limit_password_change(created_date)
 
 def test_limit_password_change_at_limit():
     # Test when password change is exactly at the limit (e.g., 15 days old)
     created_date = date.today() - timedelta(days=PASS_DAYS)
-    assert Dates.limit_password_change(created_date) == True
+    assert Dates.limit_password_change(created_date)
 
 def test_limit_password_change_outside_limit():
     # Test when password change is outside the limit (e.g., 20 days old)
     created_date = date.today() - timedelta(days=20)
-    assert Dates.limit_password_change(created_date) == False
+    assert not Dates.limit_password_change(created_date)

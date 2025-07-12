@@ -2,8 +2,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session # Nueva importación
 
 from app.crud import user as crud_user
-from app.core.config import settings
-from app.models import User, UserCreate # Nueva importación
+from app.models import User # Nueva importación
 from app.core.security import get_password_hash, verify_password # Nueva importación
 from tests.factories import UserCreateFactory
 from tests.utils.user import (

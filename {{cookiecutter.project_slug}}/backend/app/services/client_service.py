@@ -1,7 +1,6 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import HTTPException
 from sqlmodel import Session
 
 from app.crud import client as crud_client

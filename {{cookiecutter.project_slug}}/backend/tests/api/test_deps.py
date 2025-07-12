@@ -2,7 +2,6 @@ import uuid
 from datetime import timedelta
 from typing import Any, Generator
 
-import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from sqlmodel import Session

@@ -1,12 +1,11 @@
-from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, HTTPException
 from pydantic import EmailStr
 
 from app.core.config import settings
 from app.api.deps import SessionDep
-from app.models import User, Message, ResetPassword
+from app.models import Message, ResetPassword
 from app.crud import user as crud_user
 from app.utils import generate_password_reset_email, send_email
 from app.core import security

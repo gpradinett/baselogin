@@ -3,8 +3,7 @@ from sqlmodel import Session
 from http import HTTPStatus
 
 from app.core.config import settings
-from app.models import UserCreate, UserRegister, UserUpdate, User
-from app.crud import user as crud_user
+from app.models import UserUpdate, User
 from tests.factories import UserFactory, UserCreateFactory
 
 

@@ -4,7 +4,7 @@ from sqlmodel import Session
 from app.crud import user as crud_user
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.models import User, UserCreate, UserUpdate
+from app.models import User, UserUpdate
 from tests.factories import UserFactory, UserCreateFactory
 from app.services.user_service import UserService # Nueva importación
 
@@ -69,7 +69,7 @@ def authentication_token_from_email(
         user_data["hashed_password"] = hashed_password
         user_data.pop("password")
         db_obj = User(**user_data)
-        user = crud_user.create_user(session=db, user=db_obj)
+        crud_user.create_user(session=db, user=db_obj)
     else:
         password = UserCreateFactory.build().password
         user_in_update = UserUpdate(password=password)

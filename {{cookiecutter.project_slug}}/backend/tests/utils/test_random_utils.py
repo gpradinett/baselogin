@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 
 from app.utils.random_utils import RandomDigits

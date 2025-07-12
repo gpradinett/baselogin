@@ -1,12 +1,10 @@
 import pytest
-from typing import Any
 
 from fastapi import status
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.models import Client, User, ClientCreate
-from app.crud import client as crud_client
+from app.models import Client, ClientCreate
 
 
 @pytest.mark.skip(reason="Known issue with 422 Unprocessable Entity for ClientCreate with JSONB fields.")
