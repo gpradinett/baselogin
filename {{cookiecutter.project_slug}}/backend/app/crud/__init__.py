@@ -2,7 +2,6 @@ from .user import (
     create_user,
     get_user_by_email,
     update_user,
-    authenticate,
     get_multiple_users,
     get_user_by_password_reset_token,
     delete_user,
