@@ -108,8 +108,6 @@ def get_multiple_clients(*, session: Session, skip: int, limit: int) -> dict[str
     """
     count_statement = select(func.count()).select_from(Client)
     count = session.scalar(count_statement)
-
     statement = select(Client).offset(skip).limit(limit)
     clients = session.exec(statement).all()
-
     return {"data": clients, "count": count}
