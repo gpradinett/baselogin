@@ -21,7 +21,7 @@ def custom_generate_unique_id(route: APIRouter) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 🔹 Lógica para inicializar la DB al arrancar
+    # 🔹 Logic to initialize the DB at startup
     with Session(engine) as session:
         init_db(session)
     yield
