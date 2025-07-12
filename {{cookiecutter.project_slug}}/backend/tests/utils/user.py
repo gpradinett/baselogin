@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models import User, UserCreate, UserUpdate
 from tests.factories import UserFactory, UserCreateFactory
+from app.services.user_service import UserService # Nueva importación
 
 
 def user_authentication_headers(
@@ -62,22 +63,18 @@ def authentication_token_from_email(
     if not db_user:
         user_in_create = UserCreateFactory.build(email=email)
         password = user_in_create.password
-        user_to_create = User.model_validate(
-            user_in_create,
-            update={"hashed_password": get_password_hash(password)},
-        )
-        user = crud_user.create_user(session=db, user=user_to_create)
+        # Crear un objeto User directamente para pasar al CRUD
+        hashed_password = get_password_hash(user_in_create.password)
+        user_data = user_in_create.model_dump()
+        user_data["hashed_password"] = hashed_password
+        user_data.pop("password")
+        db_obj = User(**user_data)
+        user = crud_user.create_user(session=db, user=db_obj)
     else:
         password = UserCreateFactory.build().password
         user_in_update = UserUpdate(password=password)
-        user_data = user_in_update.model_dump(exclude_unset=True)
-        if "password" in user_data:
-            hashed_password = get_password_hash(password)
-            user_data["hashed_password"] = hashed_password
-        if not db_user.id:
-            raise Exception("User id not set")
-        db_user = crud_user.update_user(
-            session=db, db_user=db_user, user_data=user_data
-        )
+        # Usar el servicio para actualizar el usuario
+        user_service = UserService(db)
+        db_user = user_service.update_user(user_id=db_user.id, user_in=user_in_update)
 
     return user_authentication_headers(client=client, email=email, password=password)
