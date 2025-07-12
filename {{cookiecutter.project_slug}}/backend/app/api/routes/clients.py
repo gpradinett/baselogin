@@ -1,19 +1,15 @@
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Body
-from pydantic import ValidationError
-from pydantic import ValidationError
+from fastapi import APIRouter, Depends, Body
 from sqlmodel import Session
 
 from app.crud import client as crud_client
 from app.api.deps import SessionDep, get_current_active_superuser
 from app.models import Client, ClientCreate, ClientPublic, ClientUpdate, Message, ClientCreateResponse
+from app.services.client_service import ClientService
 
 router = APIRouter(prefix="/clients", tags=["clients"])
-
-
-from app.services.client_service import ClientService
 
 def get_client_service(session: Session = Depends(SessionDep)) -> ClientService:
     return ClientService(session)
