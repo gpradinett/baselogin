@@ -54,13 +54,15 @@ class UserService:
             user_data["hashed_password"] = hashed_password
             user_data.pop("password")
 
+    def _prepare_user_data(self, user_in: models.UserCreate | models.UserUpdate, exclude_unset: bool = False) -> dict:
+        user_data = user_in.model_dump(exclude_unset=exclude_unset)
+        self._process_password(user_data)
+        return user_data
+
     def create_user(self, user_in: models.UserCreate) -> models.User:
         self._validate_email_uniqueness(user_in.email)
         
-        hashed_password = get_password_hash(user_in.password)
-        user_data = user_in.model_dump()
-        user_data["hashed_password"] = hashed_password
-        user_data.pop("password") # Remove plaintext password
+        user_data = self._prepare_user_data(user_in)
 
         # Create a User object directly to pass to CRUD
         db_obj = models.User(**user_data)
@@ -80,13 +82,11 @@ class UserService:
     def update_user(self, user_id: UUID, user_in: models.UserUpdate) -> models.User:
         user_to_update = self._get_user_or_raise_not_found(user_id)
 
-        user_data = user_in.model_dump(exclude_unset=True)
+        user_data = self._prepare_user_data(user_in, exclude_unset=True)
 
         if user_data.get("email"):
             self._validate_email_uniqueness(user_data["email"], user_to_update.id)
         
-        self._process_password(user_data)
-
         return crud_user.update_user(session=self.db, db_user=user_to_update, user_data=user_data)
 
     def delete_user_me(self, current_user: models.User) -> models.Message:
@@ -96,10 +96,9 @@ class UserService:
         return models.Message(message="User deleted successfully")
 
     def update_user_me(self, user_in: models.UserUpdate, current_user: models.User) -> models.User:
-        user_data = user_in.model_dump(exclude_unset=True)
+        user_data = self._prepare_user_data(user_in, exclude_unset=True)
         if user_data.get("email"):
             self._validate_email_uniqueness(user_data["email"], current_user.id)
-        self._process_password(user_data)
         
         return crud_user.update_user(session=self.db, db_user=current_user, user_data=user_data)
 
