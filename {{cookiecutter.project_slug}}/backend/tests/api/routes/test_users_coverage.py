@@ -35,9 +35,9 @@ def test_create_user_email_sending_enabled(client: TestClient, db: Session, supe
     # Mock the email sending functions and settings.emails_enabled
     import app.utils
     import app.core.config
-    from unittest.mock import patch, PropertyMock
+    from unittest.mock import patch
 
-    with patch.object(app.services.user_service, 'send_email') as mock_send_email,          patch.object(app.services.user_service, 'generate_new_account_email') as mock_generate_email,          patch.object(app.services.user_service, 'settings') as mock_settings,          patch.object(app.crud.user, 'get_user_by_email', return_value=None) as mock_get_user_by_email:
+    with patch.object(app.services.user_service, 'send_email') as mock_send_email,          patch.object(app.services.user_service, 'generate_new_account_email') as mock_generate_email,          patch.object(app.services.user_service, 'settings') as mock_settings,          patch.object(app.crud.user, 'get_user_by_email', return_value=None):
 
         mock_settings.emails_enabled = True
         mock_generate_email.return_value = {"subject": "Test", "body": "Test"}
