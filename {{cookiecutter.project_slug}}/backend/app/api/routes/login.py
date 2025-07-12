@@ -9,19 +9,21 @@ from app.core import security
 from app.api.deps import SessionDep
 from app.core.config import settings
 from app.models import Token
-from app.crud import user as crud_user
+from app.services.user_service import UserService # Nueva importación
 
 router = APIRouter(tags=["login"])
+
+def get_user_service(session: SessionDep) -> UserService:
+    return UserService(session)
 
 
 @router.post("/login/access-token")
 async def login_access_token(
-    session: SessionDep,  # type: ignore
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],  # type: ignore
+    user_service: UserService = Depends(get_user_service), # type: ignore
 ) -> Token:
     """Login with access token."""
-    user = crud_user.authenticate(
-        session=session,
+    user = user_service.authenticate(
         email=form_data.username,
         password=form_data.password,
     )
