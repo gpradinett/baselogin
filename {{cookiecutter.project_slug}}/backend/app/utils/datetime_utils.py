@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 import pytz
 
 IST = pytz.timezone('America/Lima')
@@ -21,7 +21,7 @@ class Dates():
         return result
 
     def expired_token():
-        result = datetime.utcnow() + timedelta(seconds=18000)
+        result = datetime.now(timezone.utc) + timedelta(seconds=18000)
         return result
 
     def get_client_today():
