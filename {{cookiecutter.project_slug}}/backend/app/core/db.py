@@ -22,4 +22,12 @@ def init_db(session: Session) -> None:
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        crud.create_user(session=session, user_create=user_in)
+        from app.core.security import get_password_hash
+        from app.models import User
+
+        hashed_password = get_password_hash(user_in.password)
+        user_data = user_in.model_dump()
+        user_data["hashed_password"] = hashed_password
+        user_data.pop("password")
+        db_obj = User(**user_data)
+        crud.create_user(session=session, user=db_obj)
