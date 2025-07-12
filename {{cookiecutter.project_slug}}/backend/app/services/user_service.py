@@ -38,11 +38,8 @@ class UserService:
 
 
     def delete_user(self, user_id: UUID, current_user: models.User) -> models.User:
-        user_to_delete = crud_user.get_user_by_id(session=self.db, user_id=user_id)
+        user_to_delete = self._get_user_or_raise_not_found(user_id)
         
-        if not user_to_delete:
-            self._raise_user_not_found()
-
         if current_user.id == user_to_delete.id:
             self._raise_cannot_delete_self()
 
@@ -50,9 +47,7 @@ class UserService:
         return user_to_delete
 
     def update_user(self, user_id: UUID, user_in: models.UserUpdate) -> models.User:
-        user_to_update = crud_user.get_user_by_id(session=self.db, user_id=user_id)
-        if not user_to_update:
-            self._raise_user_not_found()
+        user_to_update = self._get_user_or_raise_not_found(user_id)
 
         user_data = user_in.model_dump(exclude_unset=True)
 
@@ -99,6 +94,23 @@ class UserService:
 
     def _raise_cannot_delete_self(self):
         raise HTTPException(status_code=400, detail="Superusers can't delete themselves.")
+
+    def _get_user_or_raise_not_found(self, user_id: UUID) -> models.User:
+        user = crud_user.get_user_by_id(session=self.db, user_id=user_id)
+        if not user:
+            self._raise_user_not_found()
+        return user
+
+    def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
+        existing_user = crud_user.get_user_by_email(session=self.db, email=email)
+        if existing_user and (current_user_id is None or existing_user.id != current_user_id):
+            self._raise_email_already_exists()
+
+    def _process_password(self, user_data: dict):
+        if "password" in user_data and user_data["password"] is not None:
+            hashed_password = get_password_hash(user_data["password"])
+            user_data["hashed_password"] = hashed_password
+            user_data.pop("password")
 
     def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
         existing_user = crud_user.get_user_by_email(session=self.db, email=email)
