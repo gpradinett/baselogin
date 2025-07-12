@@ -1,27 +1,6 @@
 import pytest
-from app.utils import send_email, EmailData
-from app.core.config import settings
-
-def test_send_test_email():
-    """
-    Test to send a simple email to gpradinett@gmail.com to verify email service.
-    """
-    if not settings.emails_enabled:
-        pytest.skip("Email sending is not enabled in settings.")
-
-    email_to = "gpradinett@gmail.com"
-    subject = "Test Email from Gemini CLI"
-    html_content = "<p>This is a test email sent from the Gemini CLI to verify email service functionality.</p>"
-
-    email_data = EmailData(html_content=html_content, subject=subject)
-
-    try:
-        send_email(email_to=email_to, email_data=email_data)
-        print(f"✅ Test email sent successfully to {email_to}. Please check your inbox.")
-    except Exception as e:
-        pytest.fail(f"❌ Failed to send test email: {e}")
-
 from unittest.mock import patch
+from app.utils import send_email, EmailData
 
 def test_send_email_failure():
     """
