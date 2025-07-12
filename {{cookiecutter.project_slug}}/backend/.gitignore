@@ -5,3 +5,11 @@ commit_message.txt
 # Local environment files
 .python-version
 alembic/
+
+# Generated files
+.coverage
+backend.egg-info/
+
+# Temporary files
+prueba.py
+prueba2.py
