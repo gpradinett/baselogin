@@ -7,13 +7,20 @@ from sqlmodel import Session
 
 from app.crud import user as crud_user
 from app.core.config import settings
-from app.core.security import verify_password
+from app.core.security import get_password_hash, verify_password
+from app.models import User # Nueva importación
 from tests.factories import UserFactory, UserCreateFactory
 
 
 def test_request_password_reset(client: TestClient, db: Session) -> None:
     user_in = UserCreateFactory.build()
-    crud_user.create_user(session=db, user_create=user_in)
+    # Crear un objeto User directamente para pasar al CRUD
+    hashed_password = get_password_hash(user_in.password)
+    user_data = user_in.model_dump()
+    user_data["hashed_password"] = hashed_password
+    user_data.pop("password")
+    db_obj = User(**user_data)
+    crud_user.create_user(session=db, user=db_obj)
 
     response = client.post(
         f"{settings.API_V1_STR}/password-reset/request-password-reset",
