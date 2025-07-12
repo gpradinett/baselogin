@@ -10,6 +10,7 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
+from app.core.security import get_password_hash, verify_password
 from app.models import UserCreate, Client, ClientCreate, User
 from tests.utils.user import authentication_token_from_email
 
@@ -71,7 +72,13 @@ def normal_user(db: Session) -> User:
         password="password123",
         full_name="Normal User",
     )
-    user = crud_user.create_user(session=db, user_create=user_in)
+    # Crear un objeto User directamente para pasar al CRUD
+    hashed_password = get_password_hash(user_in.password)
+    user_data = user_in.model_dump()
+    user_data["hashed_password"] = hashed_password
+    user_data.pop("password")
+    db_obj = User(**user_data)
+    user = crud_user.create_user(session=db, user=db_obj)
     return user
 
 
