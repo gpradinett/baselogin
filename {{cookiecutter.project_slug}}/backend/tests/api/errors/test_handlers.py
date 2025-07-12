@@ -5,7 +5,8 @@ from pydantic import ValidationError, BaseModel, Field
 
 from app.api.errors.handlers import http_exception_handler, validation_exception_handler
 
-class TestModel(BaseModel):
+class _TestModel(BaseModel):
+    __test__ = False
     required_field: str = Field(...)
 
 @pytest.fixture(scope="module")
@@ -19,7 +20,7 @@ def app_with_handlers():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
 
     @app.post("/test-validation-error")
-    async def test_validation_error_endpoint(data: TestModel):
+    async def test_validation_error_endpoint(data: _TestModel):
         return {"message": "success"}
 
     return app
