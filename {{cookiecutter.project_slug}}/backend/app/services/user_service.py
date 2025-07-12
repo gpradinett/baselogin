@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 from fastapi import HTTPException
 from sqlmodel import Session
@@ -114,3 +115,7 @@ class UserService:
         if not verify_password(password, db_user.hashed_password):
             return None
         return db_user
+
+
+    def get_multiple_users(self, skip: int, limit: int) -> dict[str, Any]:                  
+        return crud_user.get_multiple_users(session=self.db, skip=skip, limit=limit)

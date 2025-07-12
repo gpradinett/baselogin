@@ -18,7 +18,7 @@ def get_user_service(db: Session = Depends(deps.get_db)) -> UserService:
 
 @router.get("/", response_model=models.UsersPublic)
 def read_users(
-    session: Session = Depends(deps.get_db),
+    user_service: UserService = Depends(get_user_service),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
@@ -26,11 +26,7 @@ def read_users(
     """
     Retrieve users.
     """
-    users_data = crud_user.get_multiple_users(session=session, skip=skip, limit=limit)
-    return models.UsersPublic(
-        data=users_data["data"],
-        count=users_data["count"],
-    )
+    return user_service.get_multiple_users(skip=skip, limit=limit)
 
 @router.post("/", response_model=models.User)
 def create_user(
