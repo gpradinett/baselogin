@@ -11,5 +11,5 @@ alembic/
 backend.egg-info/
 
 # Temporary files
-prueba.py
-prueba2.py
+../prueba.py
+../prueba2.py
