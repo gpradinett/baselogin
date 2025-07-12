@@ -14,6 +14,46 @@ class UserService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _raise_user_not_found(self):
+        raise HTTPException(status_code=404, detail="The user with this username does not exist in the system.")
+
+    def _raise_email_already_exists(self):
+        raise HTTPException(status_code=400, detail="The user with this email already exists in the system.")
+
+    def _raise_cannot_delete_self(self):
+        raise HTTPException(status_code=400, detail="Superusers can't delete themselves.")
+
+    def _send_new_account_email(self, user_in: models.UserCreate):
+        if settings.emails_enabled and user_in.email:
+            email_data = generate_new_account_email(
+                email_to=user_in.email, username=user_in.email, password=user_in.password
+            )
+            send_email(
+                email_to=user_in.email,
+                email_data=email_data,
+            )
+
+    def _get_user_or_raise_not_found(self, user_id: UUID) -> models.User:
+        user = crud_user.get_user_by_id(session=self.db, user_id=user_id)
+        if not user:
+            self._raise_user_not_found()
+        return user
+
+    def _validate_user_not_self(self, current_user: models.User, user_to_delete: models.User):
+        if current_user.id == user_to_delete.id:
+            self._raise_cannot_delete_self()
+
+    def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
+        existing_user = crud_user.get_user_by_email(session=self.db, email=email)
+        if existing_user and (current_user_id is None or existing_user.id != current_user_id):
+            self._raise_email_already_exists()
+
+    def _process_password(self, user_data: dict):
+        if "password" in user_data and user_data["password"] is not None:
+            hashed_password = get_password_hash(user_data["password"])
+            user_data["hashed_password"] = hashed_password
+            user_data.pop("password")
+
     def create_user(self, user_in: models.UserCreate) -> models.User:
         self._validate_email_uniqueness(user_in.email)
         
@@ -26,22 +66,13 @@ class UserService:
         db_obj = models.User(**user_data)
         new_user = crud_user.create_user(session=self.db, user=db_obj) # Change user_create to user
         
-        if settings.emails_enabled and user_in.email:
-            email_data = generate_new_account_email(
-                email_to=user_in.email, username=user_in.email, password=user_in.password
-            )
-            send_email(
-                email_to=user_in.email,
-                email_data=email_data,
-            )
+        self._send_new_account_email(user_in)
         return new_user
-
 
     def delete_user(self, user_id: UUID, current_user: models.User) -> models.User:
         user_to_delete = self._get_user_or_raise_not_found(user_id)
         
-        if current_user.id == user_to_delete.id:
-            self._raise_cannot_delete_self()
+        self._validate_user_not_self(current_user, user_to_delete)
 
         crud_user.delete_user(session=self.db, user=user_to_delete)
         return user_to_delete
@@ -64,8 +95,6 @@ class UserService:
         crud_user.delete_user(session=self.db, user=current_user)
         return models.Message(message="User deleted successfully")
 
-
-
     def update_user_me(self, user_in: models.UserUpdate, current_user: models.User) -> models.User:
         user_data = user_in.model_dump(exclude_unset=True)
         if user_data.get("email"):
@@ -82,43 +111,6 @@ class UserService:
             return None
         return db_user
 
-
     def get_multiple_users(self, skip: int, limit: int) -> dict[str, Any]:                  
         return crud_user.get_multiple_users(session=self.db, skip=skip, limit=limit)
     
-    def _raise_user_not_found(self):
-        raise HTTPException(status_code=404, detail="The user with this username does not exist in the system.")
-
-    def _raise_email_already_exists(self):
-        raise HTTPException(status_code=400, detail="The user with this email already exists in the system.")
-
-    def _raise_cannot_delete_self(self):
-        raise HTTPException(status_code=400, detail="Superusers can't delete themselves.")
-
-    def _get_user_or_raise_not_found(self, user_id: UUID) -> models.User:
-        user = crud_user.get_user_by_id(session=self.db, user_id=user_id)
-        if not user:
-            self._raise_user_not_found()
-        return user
-
-    def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
-        existing_user = crud_user.get_user_by_email(session=self.db, email=email)
-        if existing_user and (current_user_id is None or existing_user.id != current_user_id):
-            self._raise_email_already_exists()
-
-    def _process_password(self, user_data: dict):
-        if "password" in user_data and user_data["password"] is not None:
-            hashed_password = get_password_hash(user_data["password"])
-            user_data["hashed_password"] = hashed_password
-            user_data.pop("password")
-
-    def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
-        existing_user = crud_user.get_user_by_email(session=self.db, email=email)
-        if existing_user and (current_user_id is None or existing_user.id != current_user_id):
-            self._raise_email_already_exists()
-
-    def _process_password(self, user_data: dict):
-        if "password" in user_data and user_data["password"] is not None:
-            hashed_password = get_password_hash(user_data["password"])
-            user_data["hashed_password"] = hashed_password
-            user_data.pop("password")
