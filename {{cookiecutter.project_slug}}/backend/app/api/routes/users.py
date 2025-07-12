@@ -18,7 +18,7 @@ def get_user_service(db: Session = Depends(deps.get_db)) -> UserService:
 
 @router.get("/", response_model=models.UsersPublic)
 def read_users(
-    session: Session = Depends(deps.get_db),
+    user_service: UserService = Depends(get_user_service),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
@@ -26,11 +26,7 @@ def read_users(
     """
     Retrieve users.
     """
-    users_data = crud_user.get_multiple_users(session=session, skip=skip, limit=limit)
-    return models.UsersPublic(
-        data=users_data["data"],
-        count=users_data["count"],
-    )
+    return user_service.get_multiple_users(skip=skip, limit=limit)
 
 @router.post("/", response_model=models.User)
 def create_user(
@@ -45,11 +41,13 @@ def create_user(
     return user_service.create_user(user_in=user_in)
 
 @router.post("/signup", response_model=models.User)
-def register_user(user_in: models.UserRegister, user_service: UserService = Depends(get_user_service)) -> Any:
+def register_user(user_in: models.UserRegister, session: Session = Depends(deps.get_db)) -> Any:
     """
     Create new user without the need to be logged in.
     """
-    return user_service.create_user(user_in=models.UserCreate.model_validate(user_in))
+    user_create = models.UserCreate.model_validate(user_in)
+    user = crud_user.create_user(session=session, user_create=user_create)
+    return user
 
 @router.get("/me", response_model=models.User)
 def read_user_me(current_user: models.User = Depends(deps.get_current_user)) -> Any:
