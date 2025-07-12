@@ -9,6 +9,9 @@ from app.core.config import settings
 from app.models import User
 import jwt
 
+async def async_return_none():
+    pass
+
 
 @pytest.mark.skip(reason="Known issue: 404 Not Found in test environment, does not affect manual execution.")
 def test_google_login_redirect(client: TestClient) -> None:
@@ -26,25 +29,27 @@ def test_google_callback_new_user(
     db: Session,
 ) -> None:
     # Mock Google's token endpoint response
-    mock_post.return_value = AsyncMock()
-    mock_post.return_value.status_code = status.HTTP_200_OK
-    mock_post.return_value.json = MagicMock(return_value={
+    mock_response_post = MagicMock()
+    mock_response_post.status_code = status.HTTP_200_OK
+    mock_response_post.json = MagicMock(return_value={
         "access_token": "mock_access_token",
         "id_token": jwt.encode({"sub": "1234567890", "name": "John Doe", "email": "test@example.com"}, "secret", algorithm="HS256"),
         "expires_in": 3600,
         "token_type": "Bearer",
     })
-    mock_post.return_value.raise_for_status = AsyncMock(return_value=None)
+    mock_response_post.raise_for_status.side_effect = async_return_none
+    mock_post.return_value = mock_response_post
 
     # Mock Google's userinfo endpoint response
-    mock_get.return_value = AsyncMock()
-    mock_get.return_value.status_code = status.HTTP_200_OK
-    mock_get.return_value.json = MagicMock(return_value={
+    mock_response_get = MagicMock()
+    mock_response_get.status_code = status.HTTP_200_OK
+    mock_response_get.json = MagicMock(return_value={
         "sub": "1234567890",
         "email": "test@example.com",
         "name": "John Doe",
     })
-    mock_get.return_value.raise_for_status = AsyncMock(return_value=None)
+    mock_response_get.raise_for_status.side_effect = async_return_none
+    mock_get.return_value = mock_response_get
 
     response = client.get(f"{settings.API_V1_STR}/auth/google/callback?code=mock_code")
     assert response.status_code == status.HTTP_200_OK
@@ -75,25 +80,27 @@ def test_google_callback_existing_user(
     db.refresh(normal_user)
 
     # Mock Google's token endpoint response with the correct email
-    mock_post.return_value = AsyncMock()
-    mock_post.return_value.status_code = status.HTTP_200_OK
-    mock_post.return_value.json = MagicMock(return_value={
+    mock_response_post = MagicMock()
+    mock_response_post.status_code = status.HTTP_200_OK
+    mock_response_post.json = MagicMock(return_value={
         "access_token": "mock_access_token",
         "id_token": jwt.encode({"sub": "1234567890", "name": "John Doe", "email": "existing@example.com"}, "secret", algorithm="HS256"),
         "expires_in": 3600,
         "token_type": "Bearer",
     })
-    mock_post.return_value.raise_for_status = AsyncMock(return_value=None)
+    mock_response_post.raise_for_status.side_effect = async_return_none
+    mock_post.return_value = mock_response_post
 
     # Mock Google's userinfo endpoint response
-    mock_get.return_value = AsyncMock()
-    mock_get.return_value.status_code = status.HTTP_200_OK
-    mock_get.return_value.json = MagicMock(return_value={
+    mock_response_get = MagicMock()
+    mock_response_get.status_code = status.HTTP_200_OK
+    mock_response_get.json = MagicMock(return_value={
         "sub": "1234567890",
         "email": "existing@example.com",
         "name": "John Doe",
     })
-    mock_get.return_value.raise_for_status = AsyncMock(return_value=None)
+    mock_response_get.raise_for_status.side_effect = async_return_none
+    mock_get.return_value = mock_response_get
 
     response = client.get(f"{settings.API_V1_STR}/auth/google/callback?code=mock_code")
     assert response.status_code == status.HTTP_200_OK
@@ -137,14 +144,15 @@ def test_google_callback_no_id_token(
     client: TestClient,
 ) -> None:
     # Mock a successful token response but without an id_token
-    mock_post.return_value = AsyncMock()
-    mock_post.return_value.status_code = status.HTTP_200_OK
-    mock_post.return_value.json = MagicMock(return_value={
+    mock_response_post = MagicMock()
+    mock_response_post.status_code = status.HTTP_200_OK
+    mock_response_post.json = MagicMock(return_value={
         "access_token": "mock_access_token",
         "expires_in": 3600,
         "token_type": "Bearer",
     })
-    mock_post.return_value.raise_for_status = AsyncMock(return_value=None)
+    mock_response_post.raise_for_status.side_effect = async_return_none
+    mock_post.return_value = mock_response_post
 
     response = client.get(f"{settings.API_V1_STR}/auth/google/callback?code=mock_code")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
