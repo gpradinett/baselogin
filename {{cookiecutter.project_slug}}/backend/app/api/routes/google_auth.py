@@ -110,11 +110,18 @@ async def google_callback(code: str, session: SessionDep) -> Any:
                 google_id=google_id,
                 password=password,
             )
-            user_to_create = User.model_validate(
-                new_user_in, update={"hashed_password": get_password_hash(password)}
-            )
-            new_user = crud_user.create_user(session=session, user=user_to_create)
+            # Crear un objeto User directamente para pasar al CRUD
+            hashed_password = get_password_hash(new_user_in.password)
+            user_data = new_user_in.model_dump()
+            user_data["hashed_password"] = hashed_password
+            user_data.pop("password")
+            db_obj = User(**user_data)
+            try:
+                new_user = crud_user.create_user(session=session, user=db_obj)
+            except Exception as e:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error creating user: {e}")
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            
             return Token(
                 access_token=create_access_token(new_user.id, access_token_expires),
                 token_type="bearer",
