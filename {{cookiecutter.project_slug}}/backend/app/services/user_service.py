@@ -26,14 +26,7 @@ class UserService:
         db_obj = models.User(**user_data)
         new_user = crud_user.create_user(session=self.db, user=db_obj) # Change user_create to user
         
-        if settings.emails_enabled and user_in.email:
-            email_data = generate_new_account_email(
-                email_to=user_in.email, username=user_in.email, password=user_in.password
-            )
-            send_email(
-                email_to=user_in.email,
-                email_data=email_data,
-            )
+        self._send_new_account_email(user_in)
         return new_user
 
 
@@ -95,11 +88,22 @@ class UserService:
     def _raise_cannot_delete_self(self):
         raise HTTPException(status_code=400, detail="Superusers can't delete themselves.")
 
+    def _send_new_account_email(self, user_in: models.UserCreate):
+        if settings.emails_enabled and user_in.email:
+            email_data = generate_new_account_email(
+                email_to=user_in.email, username=user_in.email, password=user_in.password
+            )
+            send_email(
+                email_to=user_in.email,
+                email_data=email_data,
+            )
+
     def _get_user_or_raise_not_found(self, user_id: UUID) -> models.User:
         user = crud_user.get_user_by_id(session=self.db, user_id=user_id)
         if not user:
             self._raise_user_not_found()
         return user
+
 
     def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
         existing_user = crud_user.get_user_by_email(session=self.db, email=email)
