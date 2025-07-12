@@ -15,10 +15,8 @@ class UserService:
         self.db = db
 
     def create_user(self, user_in: models.UserCreate) -> models.User:
-        user = crud_user.get_user_by_email(session=self.db, email=user_in.email)
-        if user:
-            self._raise_email_already_exists()
-        # Hash the password here
+        self._validate_email_uniqueness(user_in.email)
+        
         hashed_password = get_password_hash(user_in.password)
         user_data = user_in.model_dump()
         user_data["hashed_password"] = hashed_password
@@ -59,14 +57,9 @@ class UserService:
         user_data = user_in.model_dump(exclude_unset=True)
 
         if user_data.get("email"):
-            existing_user = crud_user.get_user_by_email(session=self.db, email=user_data["email"])
-            if existing_user and existing_user.id != user_to_update.id:
-                self._raise_email_already_exists()
+            self._validate_email_uniqueness(user_data["email"], user_to_update.id)
         
-        if "password" in user_data and user_data["password"] is not None:
-            hashed_password = get_password_hash(user_data["password"])
-            user_data["hashed_password"] = hashed_password
-            user_data.pop("password")
+        self._process_password(user_data)
 
         return crud_user.update_user(session=self.db, db_user=user_to_update, user_data=user_data)
 
@@ -81,13 +74,8 @@ class UserService:
     def update_user_me(self, user_in: models.UserUpdate, current_user: models.User) -> models.User:
         user_data = user_in.model_dump(exclude_unset=True)
         if user_data.get("email"):
-            existing_user = crud_user.get_user_by_email(session=self.db, email=user_data["email"])
-            if existing_user and existing_user.id != current_user.id:
-                self._raise_email_already_exists()
-        if "password" in user_data and user_data["password"] is not None:
-            hashed_password = get_password_hash(user_data["password"])
-            user_data["hashed_password"] = hashed_password
-            user_data.pop("password")
+            self._validate_email_uniqueness(user_data["email"], current_user.id)
+        self._process_password(user_data)
         
         return crud_user.update_user(session=self.db, db_user=current_user, user_data=user_data)
 
@@ -111,3 +99,14 @@ class UserService:
 
     def _raise_cannot_delete_self(self):
         raise HTTPException(status_code=400, detail="Superusers can't delete themselves.")
+
+    def _validate_email_uniqueness(self, email: str, current_user_id: UUID | None = None):
+        existing_user = crud_user.get_user_by_email(session=self.db, email=email)
+        if existing_user and (current_user_id is None or existing_user.id != current_user_id):
+            self._raise_email_already_exists()
+
+    def _process_password(self, user_data: dict):
+        if "password" in user_data and user_data["password"] is not None:
+            hashed_password = get_password_hash(user_data["password"])
+            user_data["hashed_password"] = hashed_password
+            user_data.pop("password")
