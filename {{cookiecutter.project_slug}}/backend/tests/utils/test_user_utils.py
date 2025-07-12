@@ -1,10 +1,10 @@
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session # Nueva importación
 
 from app.crud import user as crud_user
 from app.core.config import settings
-from app.models import User
-from app.core.security import get_password_hash
+from app.models import User, UserCreate # Nueva importación
+from app.core.security import get_password_hash, verify_password # Nueva importación
 from tests.factories import UserCreateFactory
 from tests.utils.user import (
     authentication_token_from_email,
@@ -37,9 +37,6 @@ def test_authentication_token_from_email_new_user(
     assert headers["Authorization"].startswith("Bearer ")
 
 
-from app.core.security import get_password_hash
-
-
 def test_authentication_token_from_email_existing_user(
     client: TestClient, db: Session
 ) -> None:
@@ -50,10 +47,13 @@ def test_authentication_token_from_email_existing_user(
     # 1. Create an existing user
     password_before = "old_password123"
     user_in_create = UserCreateFactory.build(password=password_before)
-    user_to_create = User.model_validate(
-        user_in_create, update={"hashed_password": get_password_hash(password_before)}
-    )
-    user = crud_user.create_user(session=db, user=user_to_create)
+    # Crear un objeto User directamente para pasar al CRUD
+    hashed_password = get_password_hash(user_in_create.password)
+    user_data = user_in_create.model_dump()
+    user_data["hashed_password"] = hashed_password
+    user_data.pop("password")
+    db_obj = User(**user_data)
+    user = crud_user.create_user(session=db, user=db_obj)
 
     # 2. Get token for the existing user
     headers = authentication_token_from_email(client=client, email=user.email, db=db)
@@ -61,4 +61,4 @@ def test_authentication_token_from_email_existing_user(
 
     # 3. Verify password has been updated
     db.refresh(user)
-    assert not crud_user.verify_password(password_before, user.hashed_password)
+    assert not verify_password(password_before, user.hashed_password)
